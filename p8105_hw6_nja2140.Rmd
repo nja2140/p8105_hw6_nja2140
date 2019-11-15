@@ -1,0 +1,16 @@
+---
+title: "p8105_hw6_nja2140"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Problem 1
+```{r}
+baby_data=
+  read_csv("./Data/birthweight.csv") 
+```
+
