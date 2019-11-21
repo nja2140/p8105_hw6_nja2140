@@ -1,5 +1,6 @@
 ---
 title: "p8105_hw6_nja2140"
+author:  Naina Ahuja
 output: github_document
 ---
 
@@ -8,9 +9,16 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-Problem 1
+Problem 1: Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.).
 ```{r}
 baby_data=
-  read_csv("./Data/birthweight.csv") 
+  read_csv("./Data/birthweight.csv") %>% 
+  janitor::clean_names() %>%
+  mutate(babysex = factor(babysex, levels =  c("1", "2"), labels = c("male", "female")),
+         frace = factor(frace, levels =  c("1", "2", "3", "4", "8", "9"), labels = c("white", "black", "asian", "puerto rican", "other", "unknown")),
+         malform = factor(malform, levels =  c("0", "1"), labels = c("absent", "present")),
+         mrace = factor(mrace, levels =  c("1", "2", "3", "4", "8"), labels = c("white", "black", "asian", "puerto rican", "other"))
+          )
+baby_data
 ```
 
