@@ -7,6 +7,8 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(modelr)
+set.seed(10)
 ```
 
 Problem 1: Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.).
@@ -21,4 +23,129 @@ baby_data=
           )
 baby_data
 ```
+Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
+
+To figure out the regression model for birthweight, I will run a regression on each individual variable and see which is statistically significantly associated with birthweight. Only the variables that are statistically significant will be included in the regression model. 
+
+```{r}
+mp1 = lm(bwt ~ babysex, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp2 = lm(bwt ~ bhead, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp3 = lm(bwt ~ blength, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp4 = lm(bwt ~ delwt, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp5 = lm(bwt ~ fincome, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp6 = lm(bwt ~ frace, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp7 = lm(bwt ~ gaweeks, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp8 = lm(bwt ~ malform, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp9 = lm(bwt ~ menarche, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp10 = lm(bwt ~ mheight, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp11 = lm(bwt ~ momage, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp12 = lm(bwt ~ mrace, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp13 = lm(bwt ~ parity, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp14 = lm(bwt ~ pnumlbw, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp15 = lm(bwt ~ pnumsga, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp16 = lm(bwt ~ ppbmi, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp17 = lm(bwt ~ ppwt, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp18 = lm(bwt ~ smoken, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+mp19 = lm(bwt ~ wtgain, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+```{r}
+fit = lm(bwt ~ babysex + bhead + blength + delwt + fincome + frace + gaweeks + mheight + momage + mrace + pnumlbw + pnumsga + ppbmi + ppwt + smoken + wtgain, data = baby_data) %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) 
+```
+
+
 
