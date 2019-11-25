@@ -221,20 +221,23 @@ weather_df =
     tmax = tmax / 10) %>%
   select(name, id, everything())
 ```
-We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data. Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities.
+We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data. Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities. Plot the distribution of your estimates, and describe these in words.
 
+Running the simple linear regression:
 ```{r}
 lm(tmax ~ tmin, data = weather_df) %>% 
   broom::tidy()
 ```
+Bootstrap samples:
 ```{r}
 boot_straps =
   weather_df %>% 
   modelr::bootstrap(n = 5000) 
 ```
 
+Estimates:
 ```{r}
-coeff =
+boot_strap_results=
   weather_df %>% 
   modelr::bootstrap(n = 5000) %>% 
   mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
@@ -244,10 +247,11 @@ coeff =
   group_by(.id) %>% 
   summarize(log_coef = sum(log(estimate))) %>% 
   summarize(low_int = quantile(log_coef, 0.025), up_int = quantile(log_coef, .975))
-coeff
+boot_strap_results
 ```
+
 ```{r}
-r_squared =
+bsr_r_squared =
   weather_df %>% 
   modelr::bootstrap(n = 5000) %>% 
   mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
@@ -255,8 +259,8 @@ r_squared =
   select(-strap, -models) %>% 
   unnest(results) %>% 
   summarize(low_int = quantile(r.squared, 0.025), up_int = quantile(r.squared, .975))
-r_squared
+bsr_r_squared
 ```
-Plot the distribution of your estimates, and describe these in words.
+
 
 
