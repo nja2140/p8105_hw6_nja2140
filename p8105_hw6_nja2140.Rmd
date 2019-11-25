@@ -8,6 +8,8 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(modelr)
+library(mgcv)
+library(purrr)
 set.seed(10)
 ```
 
@@ -142,10 +144,33 @@ mp19 = lm(bwt ~ wtgain, data = baby_data) %>%
 ```
 
 ```{r}
-fit = lm(bwt ~ babysex + bhead + blength + delwt + fincome + frace + gaweeks + mheight + momage + mrace + pnumlbw + pnumsga + ppbmi + ppwt + smoken + wtgain, data = baby_data) %>% 
-  broom::tidy() %>% 
-  select(term, estimate, p.value) 
+fit = lm(bwt ~ babysex + bhead + blength + delwt + fincome + frace + gaweeks + mheight + momage + mrace + pnumlbw + pnumsga + ppbmi + ppwt + smoken + wtgain, data = baby_data) 
+fit
 ```
 
+```{r}
+plot_1 = 
+  baby_data %>% 
+  modelr::add_residuals(fit) %>% 
+  modelr::add_predictions(fit) %>% 
+  ggplot(aes(x = pred, y = resid)) +
+  geom_point ()
+plot_1
+```
+Compare your model to two others:
 
+One using length at birth and gestational age as predictors (main effects only)
+One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 
+```{r}
+fit_1 = lm(bwt ~ blength + gaweeks, data = baby_data) %>% 
+  broom::tidy() %>% 
+  knitr::kable()
+```
+
+```{r}
+fit_2 = lm(bwt ~ bhead + blength + babysex + bhead*blength + bhead*babysex + babysex*blength + bhead*blength*babysex, data = baby_data) %>% 
+  broom::tidy() %>% 
+  knitr::kable()
+```
+Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
