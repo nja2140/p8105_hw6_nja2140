@@ -202,9 +202,14 @@ cv_df %>%
     names_prefix = "rmse_") %>% 
   mutate(model - fct_inorder(model)) %>% 
   ggplot(aes(x = model, y = rmse)) +
-  geom_violin () 
+  geom_violin () +
+  labs(
+    title = "Root Mean Square Error for each proposed model",
+    x = "Model",
+    y = "Root Mean Square Error (RMSE)"
+  )
 ```
-From this plot, we can see model 3 is the best.
+From this plot, we can see model 1 is the best because the root mean square error is the smallest.
 
 Problem 2: Download the data
 
@@ -221,7 +226,7 @@ weather_df =
     tmax = tmax / 10) %>%
   select(name, id, everything())
 ```
-We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data. Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities. Plot the distribution of your estimates, and describe these in words.
+We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data. Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities. 
 
 Running the simple linear regression:
 ```{r}
@@ -230,14 +235,82 @@ lm(tmax ~ tmin, data = weather_df) %>%
 ```
 Bootstrap samples:
 ```{r}
-boot_straps =
-  weather_df %>% 
-  modelr::bootstrap(n = 5000) 
+boot_sample = function(df) {
+  sample_frac(df, replace = TRUE)
+}
 ```
 
-Estimates:
+Drawing 5000 boostrap samples
 ```{r}
-boot_strap_results=
+boot_straps =
+  tibble(
+    strap_number = 1:5000,
+    strap_sample = rerun(5000, boot_sample(weather_df))
+  )
+```
+Estimates:
+
+```{r}
+boot_strap_results = 
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest(cols = c(results)) %>% 
+  select(strap_number, term, estimate) %>% 
+  pivot_wider(
+    names_from = "term",
+    values_from = "estimate"
+  ) %>% 
+  janitor::clean_names() %>% 
+  mutate(log = log(intercept*tmin)) %>% 
+  select(strap_number, log)
+boot_strap_results
+```
+```{r}
+boot_strap_r2 =
+  boot_straps %>% 
+  mutate(
+    models = map(strap_sample, ~lm(tmax ~ tmin, data=.x)),
+    results = map(models, broom::glance)) %>% 
+  select(-strap_sample, -models) %>% 
+  unnest(cols = c(results)) %>% 
+  select(strap_number, r.squared)
+boot_strap_r2
+```
+Plot the distribution of your estimates, and describe these in words.
+```{r}
+plot_2 = 
+  boot_strap_results %>% 
+  ggplot(aes(x  = log)) +
+  geom_density()
+plot_2 +
+  labs(
+    title = "Distribution of estimates for  log(B0*B1)",
+    x = "Log(B0*B1)",
+    y = "Estimates"
+  )
+```
+This  distribution of  estimates looks approximately normal.
+```{r}
+plot_3 = 
+  boot_strap_r2 %>% 
+  ggplot(aes(x  = r.squared)) +
+  geom_density()
+plot_3 +
+  labs(
+    title = "Distribution of estimates for R Squared",
+    x = "R Squareed",
+    y = "Estimates"
+  )
+plot_3
+```
+The distribution of the r squared estimates looks slightly left skewed. 
+
+Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval for r̂ 2 and log(β̂ 0∗β̂ 1).
+```{r}
+log_ci=
   weather_df %>% 
   modelr::bootstrap(n = 5000) %>% 
   mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
@@ -247,11 +320,11 @@ boot_strap_results=
   group_by(.id) %>% 
   summarize(log_coef = sum(log(estimate))) %>% 
   summarize(low_int = quantile(log_coef, 0.025), up_int = quantile(log_coef, .975))
-boot_strap_results
+log_ci
 ```
 
 ```{r}
-bsr_r_squared =
+r2_ci =
   weather_df %>% 
   modelr::bootstrap(n = 5000) %>% 
   mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
@@ -259,7 +332,7 @@ bsr_r_squared =
   select(-strap, -models) %>% 
   unnest(results) %>% 
   summarize(low_int = quantile(r.squared, 0.025), up_int = quantile(r.squared, .975))
-bsr_r_squared
+r2_ci
 ```
 
 
