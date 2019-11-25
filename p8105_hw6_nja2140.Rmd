@@ -154,7 +154,12 @@ plot_1 =
   modelr::add_residuals(fit) %>% 
   modelr::add_predictions(fit) %>% 
   ggplot(aes(x = pred, y = resid)) +
-  geom_point ()
+  geom_point () +
+  labs(
+    title = "Predicted Birthweight vs Residuals",
+    x = "Predicted Birthweight  (grams)",
+    y = "Residuals"
+  )
 plot_1
 ```
 Compare your model to two others:
@@ -197,8 +202,61 @@ cv_df %>%
     names_prefix = "rmse_") %>% 
   mutate(model - fct_inorder(model)) %>% 
   ggplot(aes(x = model, y = rmse)) +
-  geom_violin ()
+  geom_violin () 
+```
+From this plot, we can see model 3 is the best.
+
+Problem 2: Download the data
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data. Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities.
+
+```{r}
+lm(tmax ~ tmin, data = weather_df) %>% 
+  broom::tidy()
+```
+```{r}
+boot_straps =
+  weather_df %>% 
+  modelr::bootstrap(n = 5000) 
 ```
 
+```{r}
+coeff =
+  weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
+         results = map(models, broom::tidy)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  group_by(.id) %>% 
+  summarize(log_coef = sum(log(estimate))) %>% 
+  summarize(low_int = quantile(log_coef, 0.025), up_int = quantile(log_coef, .975))
+coeff
+```
+```{r}
+r_squared =
+  weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~lm(tmax ~ tmin, data = .x)),
+         results = map(models, broom::glance)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  summarize(low_int = quantile(r.squared, 0.025), up_int = quantile(r.squared, .975))
+r_squared
+```
+Plot the distribution of your estimates, and describe these in words.
 
 
